@@ -43,21 +43,79 @@ class Sqsh < Formula
 end
 
 __END__
-diff -Naur sqsh-2.5-orig/configure sqsh-2.5/configure
---- sqsh-2.5-orig/configure	2014-06-08 11:10:37.000000000 +0200
-+++ sqsh-2.5/configure	2014-06-08 13:46:17.000000000 +0200
+diff -Naur sqsh-2.5.orig/configure sqsh-2.5/configure
+--- sqsh-2.5.orig/configure	2014-04-14 10:07:04.000000000 +0200
++++ sqsh-2.5/configure	2017-02-07 23:16:15.000000000 +0100
 @@ -3937,12 +3937,12 @@
-		# Assume this is a FreeTDS build
-		#
-			SYBASE_VERSION="FreeTDS"
+ 		# Assume this is a FreeTDS build
+ 		#
+ 			SYBASE_VERSION="FreeTDS"
 -			if [ "$ac_cv_bit_mode" = "64" -a -f $SYBASE_OCOS/lib64/libct.so ]; then
 +			if [ "$ac_cv_bit_mode" = "64" -a -f $SYBASE_OCOS/lib64/libct.a ]; then
-				SYBASE_LIBDIR="$SYBASE_OCOS/lib64"
-			else
-				SYBASE_LIBDIR="$SYBASE_OCOS/lib"
-			fi
+ 				SYBASE_LIBDIR="$SYBASE_OCOS/lib64"
+ 			else
+ 				SYBASE_LIBDIR="$SYBASE_OCOS/lib"
+ 			fi
 -			if [ ! -f $SYBASE_LIBDIR/libct.so ]; then
 +			if [ ! -f $SYBASE_LIBDIR/libct.a ]; then
-				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: fail" >&5
+ 				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: fail" >&5
  $as_echo "fail" >&6; }
-				as_fn_error $? "No properly installed FreeTDS or Sybase environment found in ${SYBASE_OCOS}." "$LINENO" 5
+ 				as_fn_error $? "No properly installed FreeTDS or Sybase environment found in ${SYBASE_OCOS}." "$LINENO" 5
+diff -Naur sqsh-2.5.orig/doc/sqsh.pod sqsh-2.5/doc/sqsh.pod
+--- sqsh-2.5.orig/doc/sqsh.pod	2014-03-12 15:19:43.000000000 +0100
++++ sqsh-2.5/doc/sqsh.pod	2017-02-07 23:30:08.000000000 +0100
+@@ -145,12 +145,13 @@
+ =item -G tds_version
+
+ Set the TDS version to use. Valid versions are 4.0, 4.2, 4.6, 4.9.5, 5.0 and
+-freetds additionally supports versions 7.0 and 8.0. The specified value is
+-assigned to the variable B<$tds_version>. Input validation is not performed by
+-sqsh. However, when an invalid TDS version is specified, the default version of
+-5.0 will be used. After a session is setup, the variable B<$tds_version> will be
+-set to the TDS version in effect. The variable will not be available if option
+--G is not used. Meant for test and debugging purposes only.
++freetds additionally supports versions 7.0, 7.1, 7.2 and 7.3. The specified 
++value is assigned to the variable B<$tds_version>. Input validation is not
++performed by sqsh. However, when an invalid TDS version is specified, the
++default version of 5.0 will be used. After a session is setup, the variable
++B<$tds_version> will be set to the TDS version in effect. The variable will not
++be available if option -G is not used. Meant for test and debugging purposes
++only.
+
+ TDS stands for Tabular Data Stream and is the communication protocol Sybase and
+ Microsoft uses for Client-Server communication.
+diff -Naur sqsh-2.5.orig/src/cmd_connect.c sqsh-2.5/src/cmd_connect.c
+--- sqsh-2.5.orig/src/cmd_connect.c	2014-04-04 10:22:38.000000000 +0200
++++ sqsh-2.5/src/cmd_connect.c	2017-02-07 23:29:46.000000000 +0100
+@@ -860,8 +860,12 @@
+         /* Then we use freetds which uses enum instead of defines */
+         else if (strcmp(tds_version, "7.0") == 0)
+             version = CS_TDS_70;
+-        else if (strcmp(tds_version, "8.0") == 0)
+-            version = CS_TDS_80;
++        else if (strcmp(tds_version, "7.1") == 0)
++            version = CS_TDS_71;
++        else if (strcmp(tds_version, "7.2") == 0)
++            version = CS_TDS_72;
++        else if (strcmp(tds_version, "7.3") == 0)
++            version = CS_TDS_73;
+ #endif
+         else version = CS_TDS_50; /* default version */
+
+@@ -1258,8 +1262,14 @@
+                 case CS_TDS_70:
+                     env_set( g_env, "tds_version", "7.0" );
+                     break;
+-                case CS_TDS_80:
+-                    env_set( g_env, "tds_version", "8.0" );
++                case CS_TDS_71:
++                    env_set( g_env, "tds_version", "7.1" );
++                    break;
++                case CS_TDS_72:
++                    env_set( g_env, "tds_version", "7.2" );
++                    break;
++                case CS_TDS_73:
++                    env_set( g_env, "tds_version", "7.3" );
+                     break;
+ #endif
+                 default:
